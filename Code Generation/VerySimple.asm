@@ -1,41 +1,41 @@
- .data # Program at 3.1	 
-  .byte 10 # StringLiteral at 8.15  
-  .byte 0 # StringLiteral at 8.15  	
+ .data # Program at 3.1   
+  .byte 10 # StringLiteral at 8.15	
+  .byte 0 # StringLiteral at 8.15		 
+  .byte 0 # StringLiteral at 8.15 	 
   .byte 0 # StringLiteral at 8.15		
-  .byte 0 # StringLiteral at 8.15   
-  .word CLASS_String # StringLiteral at 8.15   
-  .word 2 # StringLiteral at 8.15		 
-  .word -1 # StringLiteral at 8.15 	
-strLit_16: # StringLiteral at 8.15		 
-subu $sp, $sp, 8 # IntegerLiteral at 5.16 
-sw $s5,4($sp) # IntegerLiteral at 5.16		 
-li $t0,123 # IntegerLiteral at 5.16 	
+  .word CLASS_String # StringLiteral at 8.15			
+  .word 2 # StringLiteral at 8.15 		
+  .word -1 # StringLiteral at 8.15		
+strLit_16: # StringLiteral at 8.15			
+subu $sp, $sp, 8 # IntegerLiteral at 5.16		 
+sw $s5,4($sp) # IntegerLiteral at 5.16		
+li $t0,123 # IntegerLiteral at 5.16		
 sw $t0,($sp) # IntegerLiteral at 5.16	
-subu $sp, $sp, 8 # IntegerLiteral at 6.22		
-sw $s5,4($sp) # IntegerLiteral at 6.22 
-li $t0,30 # IntegerLiteral at 6.22 
-sw $t0,($sp) # IntegerLiteral at 6.22   
-lw $t0,($sp) # Plus at 6.20 	
+subu $sp, $sp, 8 # IntegerLiteral at 6.22   
+sw $s5,4($sp) # IntegerLiteral at 6.22			
+li $t0,30 # IntegerLiteral at 6.22 		
+sw $t0,($sp) # IntegerLiteral at 6.22			
+lw $t0,($sp) # Plus at 6.20		 
 lw $t1,8($sp) # Plus at 6.20	
-addu $t0,$t0,$t1 # Plus at 6.20  	
-addu $sp,$sp,8 # Plus at 6.20			
-sw $t0,($sp) # Plus at 6.20	
-subu $sp,$sp,4 # This at 7.6	 	
-sw $s2,($sp) # This at 7.6	
-subu $sp, $sp, 8 # IntegerLiteral at 7.21		
-sw $s5,4($sp) # IntegerLiteral at 7.21 	
-li $t0,6 # IntegerLiteral at 7.21 		
-sw $t0,($sp) # IntegerLiteral at 7.21		
-lw $t0,($sp) # Plus at 7.19 
-lw $t1,8($sp) # Plus at 7.19		 
-addu $t0,$t0,$t1 # Plus at 7.19 		
-addu $sp,$sp,8 # Plus at 7.19	  
-sw $t0,($sp) # Plus at 7.19	  
+addu $t0,$t0,$t1 # Plus at 6.20   
+addu $sp,$sp,8 # Plus at 6.20  
+sw $t0,($sp) # Plus at 6.20		 
+subu $sp,$sp,4 # This at 7.6			
+sw $s2,($sp) # This at 7.6	 	
+subu $sp, $sp, 8 # IntegerLiteral at 7.21  
+sw $s5,4($sp) # IntegerLiteral at 7.21		
+li $t0,6 # IntegerLiteral at 7.21	  
+sw $t0,($sp) # IntegerLiteral at 7.21		 
+lw $t0,($sp) # Plus at 7.19  	
+lw $t1,8($sp) # Plus at 7.19   
+addu $t0,$t0,$t1 # Plus at 7.19 	 
+addu $sp,$sp,8 # Plus at 7.19			
+sw $t0,($sp) # Plus at 7.19	 
 subu $sp,$sp,4 # This at 8.6  
-sw $s2,($sp) # This at 8.6  
-subu $sp,$sp,4 # StringLiteral at 8.15	  
-la $t0, strLit_16 # StringLiteral at 8.15	
-sw $t0,($sp) # StringLiteral at 8.15		 
+sw $s2,($sp) # This at 8.6	 
+subu $sp,$sp,4 # StringLiteral at 8.15	 	
+la $t0, strLit_16 # StringLiteral at 8.15	  
+sw $t0,($sp) # StringLiteral at 8.15 	 
 ##############################################################
 # MiniJava/UP library for MIPS/Spim -- version that assumes
 #    one-word boolean on stack
@@ -336,7 +336,7 @@ readInt_Lib:
 	mflo $t3
 	sw $t3,($sp) # result
 	sw $s5,4($sp) # dummy GC tag
-	#lw $zero,4($sp)#**"" #--FOR MEMORY TAGGING
+	lw $zero,4($sp)#**"" #--FOR MEMORY TAGGING
 	
 	# return
 	jr $ra
@@ -365,7 +365,7 @@ readChar_Lib:
 	# replacing this-pointer saved return address
 	lw $ra,($sp)
 	sw $s5,4($sp)
-	#lw $zero,4($sp)#**"" #--FOR MEMORY TAGGING
+	lw $zero,4($sp)#**"" #--FOR MEMORY TAGGING
 	sw $v0,($sp)
 
 	# return
@@ -568,7 +568,7 @@ length_String:
 
 	# store GC tag
 	sw $s5,4($sp)
-	#lw $zero,4($sp)#**"" #--FOR MEMORY TAGGING
+	lw $zero,4($sp)#**"" #--FOR MEMORY TAGGING
 
 	# push length onto stack
 	lw $t0,-4($t0) # -length
@@ -729,7 +729,7 @@ charAt_String:
 	addu $sp,$sp,4
 	sw $t0,($sp)
 	sw $s5,4($sp)
-	#lw $zero,4($sp)#**"" #--FOR MEMORY TAGGING
+	lw $zero,4($sp)#**"" #--FOR MEMORY TAGGING
 
 	# return
 	jr $ra
@@ -981,7 +981,7 @@ compareTo_String:
   cmpHitLimitzz:
 	sw $t5,($sp) # store value
 	sw $s5,4($sp) # GC tag
-	#lw $zero,4($sp)#**"" #--FOR MEMORY TAGGING
+	lw $zero,4($sp)#**"" #--FOR MEMORY TAGGING
 	jr $ra # return
 
 ########################################################
@@ -1086,7 +1086,7 @@ newObject:
 	move $t2,$s3
   zeroObjLoop:
 	sw $zero,($s3)
-	#lw $zero,($s3)#**"" #--FOR MEMORY TAGGING	
+	lw $zero,($s3)#**"" #--FOR MEMORY TAGGING	
 
 	addu $s3,4
 	bltu $s3,$t1,zeroObjLoop
@@ -1101,9 +1101,9 @@ newObject:
 
 	# store header-values
 	sw $s6,-8($t0)   # first header-word
-	#lw $zero,-8($t0)#**"H1" #--FOR MEMORY TAGGING
+	lw $zero,-8($t0)#**"H1" #--FOR MEMORY TAGGING
 	sw $s7,-4($t0)   # second header-word
-	#lw $zero,-4($t0)#**"H2" #--FOR MEMORY TAGGING
+	lw $zero,-4($t0)#**"H2" #--FOR MEMORY TAGGING
 	
 	# put return-value into $s7 and also push it onto top of stack
 	move $s7,$t0
@@ -1272,8 +1272,8 @@ newObject:
 
 	# update the stack slot with the address in the target space
 	sw $t2,4($t0)
-	#lw $zero,-8($t2)#**"H1" #--FOR MEMORY TAGGING
-	#lw $zero,-4($t2)#**"H2" #--FOR MEMORY TAGGING
+	lw $zero,-8($t2)#**"H1" #--FOR MEMORY TAGGING
+	lw $zero,-4($t2)#**"H2" #--FOR MEMORY TAGGING
 
 	# go handle next stack slot (testing if done)
 	j gcTestIterDone1
@@ -1567,20 +1567,20 @@ vm_init:
 
 	# mark bottom of stack
 	sw $sp,stack_bottom
-	#move $sp,$sp#**"stack pointer"  #--FOR MEMORY TAGGING
+	move $sp,$sp#**"stack pointer"  #--FOR MEMORY TAGGING
 	
 	# set "this" pointer to be null, for now
 	move $s2,$zero
-	#move $s2,$s2#**"this pointer"  #--FOR MEMORY TAGGING
+	move $s2,$s2#**"this pointer"  #--FOR MEMORY TAGGING
 
 	#set up the "five" register
 	li $s5,5
-	#move $s5,$s5#**"constant 5"  #--FOR MEMORY TAGGING
+	move $s5,$s5#**"constant 5"  #--FOR MEMORY TAGGING
 
 	la $s3,seg0_start
-	#move $s3,$s3#**"next-avail-heap"  #--FOR MEMORY TAGGING
+	move $s3,$s3#**"next-avail-heap"  #--FOR MEMORY TAGGING
 	la $s4,seg0_end
-	#move $s4,$s4#**"end-heap"  #--FOR MEMORY TAGGING
+	move $s4,$s4#**"end-heap"  #--FOR MEMORY TAGGING
 	
 	# return
 	jr $ra
