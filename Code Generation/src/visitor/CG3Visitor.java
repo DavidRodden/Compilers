@@ -315,8 +315,13 @@ public class CG3Visitor extends ASTvisitor {
 	}
 
 	public Object visitCall(Call n) {
+		final int savedStackHeight = stackHeight;
+		n.obj.accept(this);
+		n.parms.accept(this);
 		if (n.obj instanceof Super) {
-			// rest here
+			final String methodName = n.methodLink.classDecl.name;
+			code.emit(n, "jal " + (n.pos < 0 ? n.methName + "_" + methodName : "fcn_" + n.uniqueId + "_" + methodName));
+			stackHeight += 0/4/8??
 		}
 		return null;
 	}
