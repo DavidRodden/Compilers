@@ -53,33 +53,35 @@ public class CG1Visitor extends ASTvisitor {
 		superclassMethodTables.addElement(new Vector<String>());
 	}
 
-	public Object visitProgram(Program n) {
-		code.emit(n, ".data");
-		ClassDecl classDecl = n.classDecls.get(0).superLink;
-		while (classDecl.superLink != null)
-			classDecl = classDecl.superLink;
-		classDecl.accept(this);
-		code.flush();
-		return null;
-	}
-
-	public Object visitClassDecl(ClassDecl n) {
-		currentMethodTable = null;
-		final boolean superNull = n.superLink == null;
-		currentMethodOffset = 1 + (superNull ? 0 : n.superLink.methodTable.size());
-		currentDataInstVarOffset = -16 - (superNull ? 0 : 4 * n.superLink.numDataInstVars);
-		currentObjInstVarOffset = superNull ? 0 : 4 * n.superLink.numObjInstVars;
-		super.visitClassDecl(n);
-		n.numDataInstVars = (-16 - currentDataInstVarOffset) / 4;
-		n.numObjInstVars = currentObjInstVarOffset / 4;
-		code.emit(n, "CLASS_" + n.name);
-		code.emit(n, ".word " + (superNull ? "0" : "CLASS_" + n.superName));
-		for (int i = 0; i < currentMethodTable.size(); i++)
-			code.emit(n, ".word " + i);
-		superclassMethodTables.push(currentMethodTable);
-		n.subclasses.accept(this);
-		superclassMethodTables.pop();
-		code.emit(n, "CLASS_END_" + n.name);
-		return null;
-	}
+	// public Object visitProgram(Program n) {
+	// code.emit(n, ".data");
+	// ClassDecl classDecl = n.classDecls.get(0).superLink;
+	// while (classDecl.superLink != null)
+	// classDecl = classDecl.superLink;
+	// classDecl.accept(this);
+	// code.flush();
+	// return null;
+	// }
+	//
+	// public Object visitClassDecl(ClassDecl n) {
+	// currentMethodTable = null;
+	// final boolean superNull = n.superLink == null;
+	// currentMethodOffset = 1 + (superNull ? 0 :
+	// n.superLink.methodTable.size());
+	// currentDataInstVarOffset = -16 - (superNull ? 0 : 4 *
+	// n.superLink.numDataInstVars);
+	// currentObjInstVarOffset = superNull ? 0 : 4 * n.superLink.numObjInstVars;
+	// super.visitClassDecl(n);
+	// n.numDataInstVars = (-16 - currentDataInstVarOffset) / 4;
+	// n.numObjInstVars = currentObjInstVarOffset / 4;
+	// code.emit(n, "CLASS_" + n.name);
+	// code.emit(n, ".word " + (superNull ? "0" : "CLASS_" + n.superName));
+	// for (int i = 0; i < currentMethodTable.size(); i++)
+	// code.emit(n, ".word " + i);
+	// superclassMethodTables.push(currentMethodTable);
+	// n.subclasses.accept(this);
+	// superclassMethodTables.pop();
+	// code.emit(n, "CLASS_END_" + n.name);
+	// return null;
+	// }
 }
