@@ -91,9 +91,18 @@ public class CG3Visitor extends ASTvisitor {
 		return null;
 	}
 
-	// public Object visitIdentifierExp(IdentifierExp n) {
-	//
-	// }
+	public Object visitIdentifierExp(IdentifierExp n) {
+		if (n.link instanceof InstVarDecl)
+			code.emit(n, "lw $t0, " + n.link.offset + "($s2)");
+		else
+			code.emit(n, "lw $t0, " + (stackHeight + n.link.offset) + "($sp)");
+		final boolean isTypeInteger = n.type instanceof IntegerType;
+		code.emit(n, "subu $sp, $sp, " + (isTypeInteger ? 8 : 4));
+		stackHeight += isTypeInteger ? 8 : 4;
+		if (isTypeInteger) code.emit(n, "sw $s5, 4($sp)");
+		code.emit(n, "sw $t0,($sp)");
+		return null;
+	}
 
 	public Object visitNot(Not n) {
 		n.exp.accept(this);
@@ -277,7 +286,13 @@ public class CG3Visitor extends ASTvisitor {
 		return null;
 	}
 
-	// public Object visitNewObject
+	public Object visitNewObject(NewObject n) {
+
+		code.emit(n, "jal newObject");
+		code.emit(n, "la $t0,CLASS_" + "name??");
+		code.emit(n, "sw $t0,-12($s7)");
+		return null;
+	}
 
 	public Object visitNewArray(NewArray n) {
 		n.sizeExp.accept(this);
@@ -296,6 +311,13 @@ public class CG3Visitor extends ASTvisitor {
 	public Object visitLocalVarDecl(LocalVarDecl n) {
 		n.initExp.accept(this);
 		n.offset = -stackHeight;
+		return null;
+	}
+
+	public Object visitCall(Call n) {
+		if (n.obj instanceof Super) {
+			// rest here
+		}
 		return null;
 	}
 
@@ -374,6 +396,11 @@ public class CG3Visitor extends ASTvisitor {
 																						// pop
 																						// stack
 		code.emit(n, "jr $ra");
+		return null;
+	}
+
+	public Object visitProgram(Program n) {
+
 		return null;
 	}
 }
