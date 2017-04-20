@@ -106,21 +106,33 @@ public class CG3Visitor extends ASTvisitor {
 		return null;
 	}
 
-	//
-	// public Object visitNot(Not n) {
-	// n.exp.accept(this);
-	// code.emit(n, "lw $t0,($sp)");
-	// code.emit(n, "xor $t0,$t0,1");
-	// code.emit(n, "sw $t0,($sp)");
-	// return null;
-	// }
-	//
+	public Object visitNot(Not n) {
+		n.exp.accept(this);
+		code.emit(n, "lw $t0,($sp)");
+		code.emit(n, "xor $t0,$t0,1");
+		code.emit(n, "sw $t0,($sp)");
+		return null;
+	}
+
 	public Object visitPlus(Plus n) {
 		n.left.accept(this);
 		n.right.accept(this);
 		code.emit(n, "lw $t0,($sp)");
 		code.emit(n, "lw $t1,8($sp)");
 		code.emit(n, "addu $t0,$t0,$t1");
+		code.emit(n, "addu $sp,$sp,8");
+		stackHeight -= 8;
+		code.emit(n, "sw $t0,($sp)");
+		return null;
+	}
+
+	public Object visitTimes(Times n) {
+		n.left.accept(this);
+		n.right.accept(this);
+		code.emit(n, "lw $t0,($sp)");
+		code.emit(n, "lw $t1,8($sp)");
+		code.emit(n, "mult $t0,$t1");
+		code.emit(n, "mflo $t0");
 		code.emit(n, "addu $sp,$sp,8");
 		stackHeight -= 8;
 		code.emit(n, "sw $t0,($sp)");
@@ -139,15 +151,14 @@ public class CG3Visitor extends ASTvisitor {
 		return null;
 	}
 
-	//
-	// public Object visitDivide(Divide n) {
-	// n.left.accept(this);
-	// n.right.accept(this);
-	// code.emit(n, "jal divide");
-	// stackHeight -= 8;
-	// return null;
-	// }
-	//
+	public Object visitDivide(Divide n) {
+		n.left.accept(this);
+		n.right.accept(this);
+		code.emit(n, "jal divide");
+		stackHeight -= 8;
+		return null;
+	}
+
 	// public Object visitRemainder(Remainder n) {
 	// n.left.accept(this);
 	// n.right.accept(this);
