@@ -47,29 +47,28 @@ public class CG3Visitor extends ASTvisitor {
 		return null;
 	}
 
-	//
-	// public Object visitNull(Null n) {
-	// code.emit(n, "subu $sp,$sp,4"); // ***
-	// stackHeight += 4;
-	// code.emit(n, "sw $zero,($sp)");
-	// return null;
-	// }
-	//
-	// public Object visitTrue(True n) {
-	// code.emit(n, "subu $sp,$sp,4"); // ***
-	// stackHeight += 4;
-	// code.emit(n, "li $t0, 1");
-	// code.emit(n, "sw $t0,($sp)");
-	// return null;
-	// }
-	//
-	// public Object visitFalse(False n) {
-	// code.emit(n, "subu $sp,$sp,4"); // ***
-	// stackHeight += 4;
-	// code.emit(n, "sw $zero,($sp)");
-	// return null;
-	// }
-	//
+	public Object visitNull(Null n) {
+		code.emit(n, "subu $sp,$sp,4");
+		stackHeight += 4;
+		code.emit(n, "sw $zero,($sp)");
+		return null;
+	}
+
+	public Object visitTrue(True n) {
+		code.emit(n, "subu $sp,$sp,4");
+		stackHeight += 4;
+		code.emit(n, "li $t0, 1");
+		code.emit(n, "sw $t0,($sp)");
+		return null;
+	}
+
+	public Object visitFalse(False n) {
+		code.emit(n, "subu $sp,$sp,4");
+		stackHeight += 4;
+		code.emit(n, "sw $zero,($sp)");
+		return null;
+	}
+
 	public Object visitStringLiteral(StringLiteral n) {
 		code.emit(n, "subu $sp,$sp,4");
 		stackHeight += 4;
@@ -420,8 +419,8 @@ public class CG3Visitor extends ASTvisitor {
 		code.emit(n, "# exit program");
 		code.emit(n, "li $v0,10");
 		code.emit(n, "syscall");
-		code.emit(n, "CLASS_String:");	//temp addition for 5.1
-		code.emit(n, "CLASS_Main:");	//temp addition for 5.1
+		code.emit(n, "CLASS_String:"); // temp addition for 5.1
+		code.emit(n, "CLASS_Main:"); // temp addition for 5.1
 		n.classDecls.accept(this);
 		code.flush();
 		return null;
