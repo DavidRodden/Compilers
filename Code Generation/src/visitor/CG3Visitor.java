@@ -186,46 +186,55 @@ public class CG3Visitor extends ASTvisitor {
 		return null;
 	}
 
-	//
-	// public Object visitGreaterThan(GreaterThan n) {
-	// n.left.accept(this);
-	// n.right.accept(this);
-	// code.emit(n, "lw $t0,($sp)");
-	// code.emit(n, "lw $t1,8($sp)");
-	// code.emit(n, "sgt $t0,$t1,$t0");
-	// code.emit(n, "addu $sp,$sp,12");
-	// stackHeight -= 12;
-	// code.emit(n, "sw $t0,($sp)");
-	// return null;
-	// }
-	//
-	// public Object visitLessThan(LessThan n) {
-	// n.left.accept(this);
-	// n.right.accept(this);
-	// code.emit(n, "lw $t0,($sp)");
-	// code.emit(n, "lw $t1,8($sp)");
-	// code.emit(n, "slt $t0,$t1,$t0");
-	// code.emit(n, "addu $sp,$sp,12");
-	// stackHeight -= 12;
-	// code.emit(n, "sw $t0,($sp)");
-	// return null;
-	// }
-	//
-	// public Object visitAnd(And n) {
-	// n.left.accept(this);
-	// code.emit(n, "lw $t0,($sp)");
-	// code.emit(n, "beq $t0,$zero, skip_" + n.uniqueId);
-	// code.emit(n, "addu $sp,$sp,4");
-	// stackHeight -= 4;
-	// n.right.accept(this);
-	// code.emit(n, "skip_" + n.uniqueId);
-	// return null;
-	// }
-	//
-	// // public Object visitOr(Or n){
-	// // n.left.accept(this);
-	// // }
-	//
+	public Object visitGreaterThan(GreaterThan n) {
+		n.left.accept(this);
+		n.right.accept(this);
+		code.emit(n, "lw $t0,($sp)");
+		code.emit(n, "lw $t1,8($sp)");
+		code.emit(n, "sgt $t0,$t1,$t0");
+		code.emit(n, "addu $sp,$sp,12");
+		stackHeight -= 12;
+		code.emit(n, "sw $t0,($sp)");
+		return null;
+	}
+
+	public Object visitLessThan(LessThan n) {
+		n.left.accept(this);
+		n.right.accept(this);
+		code.emit(n, "lw $t0,($sp)");
+		code.emit(n, "lw $t1,8($sp)");
+		code.emit(n, "slt $t0,$t1,$t0");
+		code.emit(n, "addu $sp,$sp,12");
+		stackHeight -= 12;
+		code.emit(n, "sw $t0,($sp)");
+		return null;
+	}
+
+	public Object visitAnd(And n) {
+		n.left.accept(this);
+		code.emit(n, "lw $t0,($sp)");
+		code.emit(n, "beq $t0,$zero, skip_" + n.uniqueId);
+		code.emit(n, "addu $sp,$sp,4");
+		stackHeight -= 4;
+		n.right.accept(this);
+		code.emit(n, "skip_" + n.uniqueId);
+		return null;
+	}
+
+	/**
+	 * Potentially incorrect, as it is meant to be 'analogous' to visitAnd
+	 */
+	public Object visitOr(Or n) {
+		n.left.accept(this);
+		code.emit(n, "lw $t0, ($sp)");
+		code.emit(n, "beq $t0,$zero, skip_" + n.uniqueId);
+		code.emit(n, "addu $sp,$sp,4");
+		stackHeight -= 4;
+		n.right.accept(this);
+		code.emit(n, "skip_" + n.uniqueId);
+		return null;
+	}
+
 	// public Object visitArrayLength(ArrayLength n) {
 	// n.exp.accept(this);
 	// code.emit(n, "lw $t0,($sp)");
