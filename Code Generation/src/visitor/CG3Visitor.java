@@ -159,32 +159,33 @@ public class CG3Visitor extends ASTvisitor {
 		return null;
 	}
 
-	// public Object visitRemainder(Remainder n) {
-	// n.left.accept(this);
-	// n.right.accept(this);
-	// code.emit(n, "jal remainder");
-	// stackHeight -= 8;
-	// return null;
-	// }
-	//
-	// public Object visitEquals(Equals n) {
-	// n.left.accept(this);
-	// n.right.accept(this);
-	// code.emit(n, "lw $t0,($sp)");
-	// if (n.type instanceof IntegerType) {
-	// code.emit(n, "lw $t1,8($sp)");
-	// code.emit(n, "seq $t0,$t0,$t1");
-	// code.emit(n, "addu $sp,$sp,12");
-	// stackHeight -= 12;
-	// } else {
-	// code.emit(n, "lw $t1,4($sp)");
-	// code.emit(n, "seq $t0,$t0,$t1");
-	// code.emit(n, "addu $sp,$sp,4");
-	// stackHeight -= 4;
-	// }
-	// code.emit(n, "sw $t0,($sp)");
-	// return null;
-	// }
+	public Object visitRemainder(Remainder n) {
+		n.left.accept(this);
+		n.right.accept(this);
+		code.emit(n, "jal remainder");
+		stackHeight -= 8;
+		return null;
+	}
+
+	public Object visitEquals(Equals n) {
+		n.left.accept(this);
+		n.right.accept(this);
+		code.emit(n, "lw $t0,($sp)");
+		if (n.type instanceof IntegerType) {
+			code.emit(n, "lw $t1,8($sp)");
+			code.emit(n, "seq $t0,$t0,$t1");
+			code.emit(n, "addu $sp,$sp,12");
+			stackHeight -= 12;
+		} else {
+			code.emit(n, "lw $t1,4($sp)");
+			code.emit(n, "seq $t0,$t0,$t1");
+			code.emit(n, "addu $sp,$sp,4");
+			stackHeight -= 4;
+		}
+		code.emit(n, "sw $t0,($sp)");
+		return null;
+	}
+
 	//
 	// public Object visitGreaterThan(GreaterThan n) {
 	// n.left.accept(this);
