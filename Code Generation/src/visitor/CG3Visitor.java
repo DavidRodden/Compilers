@@ -441,11 +441,29 @@ public class CG3Visitor extends ASTvisitor {
 			code.emit(n, "lw $t0,($sp)");
 			code.emit(n, "lw $t1," + (n.lhs.type instanceof IntegerType ? 8 : 4) + "($sp)");
 			code.emit(n, "beq $t1,$zero,nullPtrException");
-			code.emit(n, "sw $t0, " + ((InstVarAccess)n.lhs).varDec.offset + "($t1)");	//unsure if correct
+			code.emit(n, "sw $t0, " + ((InstVarAccess) n.lhs).varDec.offset + "($t1)"); // unsure
+																						// if
+																						// correct
 			code.emit(n, "addu $sp, $sp, " + (n.lhs.type instanceof IntegerType ? 12 : 8));
 			stackHeight -= n.lhs.type instanceof IntegerType ? 12 : 8;
+		} else if (n.lhs instanceof ArrayLookup) {
+			((ArrayLookup) n.lhs).arrExp.accept(this);
+			((ArrayLookup) n.lhs).idxExp.accept(this);
+			n.rhs.accept(this);
+			code.emit(n, "lw $t0,($sp)");
+			final int intAddition = n.lhs.type instanceof IntegerType ? 4 : 0;
+			code.emit(n, "lw $t1," + (12 + intAddition) + "($sp)");
+			code.emit(n, "beq $t1,$zero,nullPtrException");
+			code.emit(n, "lw $t2," + (4 + intAddition) + "($sp)");
+			code.emit(n, "lw $t3,-4($t1)");
+			code.emit(n, "bgeu $t2,$t3,arrayIndexOutOfBounds");
+			code.emit(n, "sll $t2,$t2,2");
+			code.emit(n, "addu $t2,$t2,$t1");
+			code.emit(n, "sw $t0,($t2)");
+			final int stackChange = 16 + intAddition;
+			code.emit(n, "addu $sp,$sp," + stackChange);
+			stackHeight -= stackChange;
 		}
-
 		return null;
 	}
 
