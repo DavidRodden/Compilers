@@ -309,11 +309,7 @@ public class CG3Visitor extends ASTvisitor {
 
 	public Object visitCast(Cast n) {
 		n.exp.accept(this);
-		if (!n.exp.type.equals(n.castType)) return null; // check if the
-		// expression’s type
-		// is a proper
-		// superclass of the
-		// target type
+		if (!n.exp.type.equals(n.castType)) return null;
 		code.emit(n, "la $t0,CLASS_VerySimple");
 		code.emit(n, "la $t1,CLASS_END_VerySimple");
 		code.emit(n, "checkCast");
@@ -345,16 +341,12 @@ public class CG3Visitor extends ASTvisitor {
 		return null;
 	}
 
-	/**
-	 * Call for whether object is a super or not
-	 */
 	public Object visitCall(Call n) {
-		// as it currently stands, only checks for whether it is a super
 		final int savedStackHeight = stackHeight;
 		n.obj.accept(this);
 		n.parms.accept(this);
 		final int stackAddition = n.type == null ? 0 : n.type instanceof IntegerType ? 8 : 4;
-		if (n.accept(this) instanceof Super) {
+		if (n.obj instanceof Super) {
 			if (n.obj instanceof Super) {
 				final String methodName = n.methodLink.classDecl.name;
 				code.emit(n, "jal " + (n.pos < 0 ? n.methName + "_" + methodName : "fcn_" + n.uniqueId + "_" + methodName));
