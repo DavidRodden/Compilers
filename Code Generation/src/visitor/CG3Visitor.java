@@ -1,7 +1,7 @@
 package visitor;
 
 import syntaxtree.*;
-
+import wrangLR.generator.main.Main;
 import errorMsg.*;
 import java.io.*;
 
@@ -425,7 +425,18 @@ public class CG3Visitor extends ASTvisitor {
 	 * ArrayLookup
 	 */
 	public Object visitAssign(Assign n) {
-
+		if (n.lhs instanceof IdentifierExp) {
+			n.rhs.accept(this);
+			code.emit(n, "lw $t0,($sp)");
+			if (((IdentifierExp) n.lhs).link instanceof InstVarDecl)
+				code.emit(n, "sw $t0," + ((IdentifierExp) n.lhs).link.offset + "($s2)");
+			else {
+				code.emit(n, "sw $t0, " + (((IdentifierExp) n.lhs).link.offset + stackHeight) + "($sp)");
+			}
+			code.emit(n, "addu $sp, $sp, " + (n.lhs.type instanceof IntegerType ? 8 : 4));
+			stackHeight -= n.lhs.type instanceof IntegerType ? 8 : 4;
+		}
+		
 		return null;
 	}
 
@@ -435,9 +446,6 @@ public class CG3Visitor extends ASTvisitor {
 		return null;
 	}
 
-	/**
-	 * Optional, return to when all else is complete
-	 */
 	public Object visitSwitch(Switch n) {
 		n.stackHeight = stackHeight;
 		n.exp.accept(this);
@@ -467,11 +475,10 @@ public class CG3Visitor extends ASTvisitor {
 		code.emit(n, "sw $s2,($sp)");
 		code.emit(n, "lw $s2," + n.thisPtrOffset + "($sp)");
 		code.emit(n, "sw $ra," + n.thisPtrOffset + "($sp)");
-		stackHeight = 0; // set visitor's stack height to 0??
+		stackHeight = 0;
 		n.stmts.accept(this);
-		code.emit(n, "lw $ra, " + 4 + "($sp)"); // offset of saved return
-												// address???
-		code.emit(n, "lw $s2, " + 4 + "($sp)"); // saved this pointer??
+		code.emit(n, "lw $ra, " + (stackHeight + n.thisPtrOffset) + "($sp)");
+		code.emit(n, "lw $s2, " + stackHeight + "($sp)");
 		code.emit(n, "addu $sp, $sp, " + (stackHeight + 4 + n.formals.size() * 4 + 4));
 		code.emit(n, "jr $ra");
 		return null;
@@ -484,14 +491,21 @@ public class CG3Visitor extends ASTvisitor {
 		code.emit(n, "sw $s2,($sp)");
 		code.emit(n, "lw $s2," + n.thisPtrOffset + "($sp)");
 		code.emit(n, "sw $ra," + n.thisPtrOffset + "($sp)");
-		stackHeight = 0; // set visitor's stack height to 0??
+		stackHeight = 0;
 		n.stmts.accept(this);
 		n.rtnExp.accept(this);
-		code.emit(n, "lw $ra, " + 4 + "($sp)"); // offset of saved return
-		// address???
-		code.emit(n, "lw $s2, " + 4 + "($sp)"); // saved this pointer??
-		code.emit(n, ""); // determine offset on stack for return-value
-
+		code.emit(n, "lw $ra, " + (stackHeight + n.thisPtrOffset) + "($sp)");
+		code.emit(n, "lw $s2, " + stackHeight + "($sp)");
+		// need offset on stack for return value relative to current stack
+		// height
+		// need offset for CG tag for when int
+		code.emit(n, "lw $t0,($sp)");
+		code.emit(n, "sw $t0,YYY($sp)");
+		if (n.rtnType instanceof IntegerType) {
+			code.emit(n, "sw $s5,ZZZ($sp)");
+		}
+		code.emit(n, "addu $sp, $sp, " + (stackHeight + 4 + n.formals.size() * 4 + 4 - (n.rtnType instanceof IntegerType ? 8 : 4)));
+		code.emit(n, "jr $ra");
 		return null;
 	}
 
@@ -506,8 +520,6 @@ public class CG3Visitor extends ASTvisitor {
 		code.emit(n, "# exit program");
 		code.emit(n, "li $v0,10");
 		code.emit(n, "syscall");
-		code.emit(n, "CLASS_String:"); // temp addition for 5.1
-		code.emit(n, "CLASS_Main:"); // temp addition for 5.1
 		n.classDecls.accept(this);
 		code.flush();
 		return null;
