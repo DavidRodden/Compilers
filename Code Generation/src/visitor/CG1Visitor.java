@@ -53,35 +53,67 @@ public class CG1Visitor extends ASTvisitor {
 		superclassMethodTables.addElement(new Vector<String>());
 	}
 
-	// public Object visitProgram(Program n) {
-	// code.emit(n, ".data");
-	// ClassDecl classDecl = n.classDecls.get(0).superLink;
-	// while (classDecl.superLink != null)
-	// classDecl = classDecl.superLink;
-	// classDecl.accept(this);
-	// code.flush();
-	// return null;
-	// }
-	//
-	// public Object visitClassDecl(ClassDecl n) {
-	// currentMethodTable = null;
-	// final boolean superNull = n.superLink == null;
-	// currentMethodOffset = 1 + (superNull ? 0 :
-	// n.superLink.methodTable.size());
-	// currentDataInstVarOffset = -16 - (superNull ? 0 : 4 *
-	// n.superLink.numDataInstVars);
-	// currentObjInstVarOffset = superNull ? 0 : 4 * n.superLink.numObjInstVars;
-	// super.visitClassDecl(n);
-	// n.numDataInstVars = (-16 - currentDataInstVarOffset) / 4;
-	// n.numObjInstVars = currentObjInstVarOffset / 4;
-	// code.emit(n, "CLASS_" + n.name);
-	// code.emit(n, ".word " + (superNull ? "0" : "CLASS_" + n.superName));
-	// for (int i = 0; i < currentMethodTable.size(); i++)
-	// code.emit(n, ".word " + i);
-	// superclassMethodTables.push(currentMethodTable);
-	// n.subclasses.accept(this);
-	// superclassMethodTables.pop();
-	// code.emit(n, "CLASS_END_" + n.name);
-	// return null;
-	// }
+	public Object visitProgram(Program n) {
+		code.emit(n, ".data");
+		ClassDecl classDecl = n.classDecls.get(0);
+		while (classDecl.superLink != null)
+			classDecl = classDecl.superLink;
+		classDecl.accept(this);
+		code.flush();
+		return null;
+	}
+
+	public Object visitClassDecl(ClassDecl n) {
+		currentMethodTable = superclassMethodTables.peek();
+		final boolean superNull = n.superLink == null;
+		currentMethodOffset = 1 + n.superLink.methodTable.size();
+		currentDataInstVarOffset = superNull ? -16 : -16 - (superNull ? 0 : 4 * n.superLink.numDataInstVars);
+		currentObjInstVarOffset = superNull ? 0 : 4 * n.superLink.numObjInstVars;
+		super.visitClassDecl(n);
+		n.numDataInstVars = (-16 - currentDataInstVarOffset) / 4;
+		n.numObjInstVars = currentObjInstVarOffset / 4;
+		code.emit(n, "CLASS_" + n.name);
+		code.emit(n, ".word " + (superNull ? "0" : "CLASS_" + n.superName));
+		currentMethodTable.forEach(t -> code.emit(n, ".word " + t));
+		superclassMethodTables.push(currentMethodTable);
+		n.subclasses.accept(this);
+		superclassMethodTables.pop();
+		code.emit(n, "CLASS_END_" + n.name);
+		return null;
+	}
+
+	public Object visitMethodDecl(MethodDecl n) {
+		n.thisPtrOffset = 4 * (1 + n.formals.size());
+		currentFormalVarOffset = n.thisPtrOffset;
+		super.visitMethodDecl(n);
+		final String label = n.pos < 0 ? n.name + "_" + n.classDecl.name : String.format("fcn_%d_%s", n.uniqueId, n.name);
+		if (n.superMethod == null) {
+			n.vtableOffset = currentMethodOffset++;
+			currentMethodTable.add(label);
+			return null;
+		}
+		n.vtableOffset = n.superMethod.vtableOffset;
+		for (int i = 0; i < currentMethodTable.size(); i++)
+			if (currentMethodTable.get(i).equals(n.superMethod)) currentMethodTable.add(i, label);
+		return null;
+	}
+
+	public Object visitInstVarDecl(InstVarDecl n) {
+		super.visitInstVarDecl(n);
+		if (n.type instanceof IntegerType || n.type instanceof BooleanType) {
+			n.offset = currentDataInstVarOffset;
+			currentDataInstVarOffset -= 4;
+		} else if (n.type instanceof IdentifierType || n.type instanceof ArrayType) {
+			n.offset = currentObjInstVarOffset;
+			currentObjInstVarOffset += 4;
+		}
+		return null;
+	}
+
+	public Object visitFormalDecl(FormalDecl n) {
+		super.visitFormalDecl(n);
+		currentFormalVarOffset -= n.type instanceof IntegerType ? 8 : 4;
+		n.offset = currentFormalVarOffset;
+		return null;
+	}
 }

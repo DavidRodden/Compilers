@@ -33,6 +33,14 @@ public class CG3Visitor extends ASTvisitor {
 		conEvalVis = new ConstEvalVisitor();
 	}
 
+	/*
+	 * Important Questions:
+	 * 
+	 * When pushing a word onto the stack, do we add +4 to the s.height or -4?
+	 * Does addu 4 to $sp signify that we must -4 from s.height? For CLASS_...,
+	 * do we obtain the name through the parameter
+	 */
+
 	private void initInstanceVars(PrintStream out) {
 		code = new CodeStream(out, errorMsg);
 		stackHeight = 0;
@@ -235,117 +243,113 @@ public class CG3Visitor extends ASTvisitor {
 		return null;
 	}
 
-	// public Object visitArrayLength(ArrayLength n) {
-	// n.exp.accept(this);
-	// code.emit(n, "lw $t0,($sp)");
-	// code.emit(n, "beq $t0,$zero,nullPtrException");
-	// code.emit(n, "lw $t0,-4($t0)");
-	// code.emit(n, "sw $s5,($sp)");
-	// code.emit(n, "subu $sp,4");
-	// stackHeight += 4;
-	// code.emit(n, "sw $t0,($sp)");
-	// return null;
-	// }
-	//
-	// // public Object visitArrayLength
-	//
-	// public Object visitArrayLookup(ArrayLookup n) {
-	// n.arrExp.accept(this);
-	// n.idxExp.accept(this);
-	// code.emit(n, "lw $t0,8($sp)");
-	// code.emit(n, "beq $t0,$zero,nullPtrException");
-	// code.emit(n, "lw $t1,-4($t0)");
-	// code.emit(n, "lw $t2,($sp)");
-	// code.emit(n, "bgeu $t2,$t1,arrayIndexOutOfBounds");
-	// code.emit(n, "sll $t2,$t2,2");
-	// code.emit(n, "addu $t2,$t2,$t0");
-	// code.emit(n, "lw $t0,($t2)");
-	// if (n.type instanceof IntegerType) {
-	// code.emit(n, "sw $t0,4($sp)");
-	// code.emit(n, "sw $s5,8($sp)");
-	// code.emit(n, "addu $sp,$sp,4");
-	// stackHeight -= 4;
-	// return null;
-	// }
-	// code.emit(n, "sw $t0,8($sp)");
-	// code.emit(n, "addu $sp,$sp,8");
-	// stackHeight -= 8;
-	// return null;
-	// }
-	//
-	// public Object visitInstVarAccess(InstVarAccess n) {
-	// n.exp.accept(this);
-	// code.emit(n, "lw $t0,($sp)");
-	// code.emit(n, "beq $t0,$zero,nullPtrException");
-	// code.emit(n, "lw $t0," + n.varDec.offset + "($t0)");
-	// if (!(n.type instanceof IntegerType)) {
-	// code.emit(n, "sw $t0,($sp)");
-	// return null;
-	// }
-	// code.emit(n, "subu $sp,$sp,4");
-	// stackHeight += 4;
-	// code.emit(n, "sw $s5,4($sp)");
-	// code.emit(n, "sw $t0,($sp)");
-	// return null;
-	// }
-	//
-	// public Object visitInstanceOf(InstanceOf n) {
-	// n.exp.accept(this);
-	// code.emit(n, "la $t0,CLASS_VerySimple"); // testing for VerySimple
-	// // class?
-	// code.emit(n, "la $t1,CLASS_END_VerySimple");
-	// code.emit(n, "jal instanceOf");
-	// return null;
-	// }
-	//
-	// public Object visitCast(Cast n) {
-	// n.exp.accept(this);
-	// if (!n.exp.type.equals(n.castType)) return null; // check if the
-	// // expression’s type
-	// // is a proper
-	// // superclass of the
-	// // target type
-	// code.emit(n, "la $t0,CLASS_VerySimple");
-	// code.emit(n, "la $t1,CLASS_END_VerySimple");
-	// code.emit(n, "checkCast");
-	// return null;
-	// }
-	//
+	public Object visitArrayLength(ArrayLength n) {
+		n.exp.accept(this);
+		code.emit(n, "lw $t0,($sp)");
+		code.emit(n, "beq $t0,$zero,nullPtrException");
+		code.emit(n, "lw $t0,-4($t0)");
+		code.emit(n, "sw $s5,($sp)");
+		code.emit(n, "subu $sp,4");
+		stackHeight += 4;
+		code.emit(n, "sw $t0,($sp)");
+		return null;
+	}
+
+	public Object visitArrayLookup(ArrayLookup n) {
+		n.arrExp.accept(this);
+		n.idxExp.accept(this);
+		code.emit(n, "lw $t0,8($sp)");
+		code.emit(n, "beq $t0,$zero,nullPtrException");
+		code.emit(n, "lw $t1,-4($t0)");
+		code.emit(n, "lw $t2,($sp)");
+		code.emit(n, "bgeu $t2,$t1,arrayIndexOutOfBounds");
+		code.emit(n, "sll $t2,$t2,2");
+		code.emit(n, "addu $t2,$t2,$t0");
+		code.emit(n, "lw $t0,($t2)");
+		if (n.type instanceof IntegerType) {
+			code.emit(n, "sw $t0,4($sp)");
+			code.emit(n, "sw $s5,8($sp)");
+			code.emit(n, "addu $sp,$sp,4");
+			stackHeight -= 4;
+			return null;
+		}
+		code.emit(n, "sw $t0,8($sp)");
+		code.emit(n, "addu $sp,$sp,8");
+		stackHeight -= 8;
+		return null;
+	}
+
+	public Object visitInstVarAccess(InstVarAccess n) {
+		n.exp.accept(this);
+		code.emit(n, "lw $t0,($sp)");
+		code.emit(n, "beq $t0,$zero,nullPtrException");
+		code.emit(n, "lw $t0," + n.varDec.offset + "($t0)");
+		if (!(n.type instanceof IntegerType)) {
+			code.emit(n, "sw $t0,($sp)");
+			return null;
+		}
+		code.emit(n, "subu $sp,$sp,4");
+		stackHeight += 4;
+		code.emit(n, "sw $s5,4($sp)");
+		code.emit(n, "sw $t0,($sp)");
+		return null;
+	}
+
+	/**
+	 * For the name of the class we're testing for?
+	 */
+	public Object visitInstanceOf(InstanceOf n) {
+		n.exp.accept(this);
+		code.emit(n, "la $t0,CLASS_VerySimple"); // testing for VerySimple
+		// class?
+		code.emit(n, "la $t1,CLASS_END_VerySimple");
+		code.emit(n, "jal instanceOf");
+		return null;
+	}
+
+	public Object visitCast(Cast n) {
+		n.exp.accept(this);
+		if (!n.exp.type.equals(n.castType)) return null; // check if the
+		// expression’s type
+		// is a proper
+		// superclass of the
+		// target type
+		code.emit(n, "la $t0,CLASS_VerySimple");
+		code.emit(n, "la $t1,CLASS_END_VerySimple");
+		code.emit(n, "checkCast");
+		return null;
+	}
+
 	public Object visitNewObject(NewObject n) {
 		code.emit(n, "li $s6," + n.objType.link.numObjInstVars);
 		code.emit(n, "li $s7," + (1 + n.objType.link.numDataInstVars));
 		code.emit(n, "jal newObject");
 		stackHeight += 4;
-		code.emit(n, "la $t0,CLASS_" + n.objType.name);
+		code.emit(n, "la $t0,CLASS_" + n.objType.name); // this should be the
+														// name of the class?
 		code.emit(n, "sw $t0,-12($s7)");
 		return null;
 	}
 
-	//
-	// public Object visitNewArray(NewArray n) {
-	// n.sizeExp.accept(this);
-	// code.emit(n, "lw $s7,($sp)");
-	// code.emit(n, "addu $sp,$sp,8");
-	// stackHeight -= 8;
-	// final boolean isIntOrBool = n.objType instanceof IntegerType || n.objType
-	// instanceof BooleanType;
-	// code.emit(n, "li $s6, " + (isIntOrBool ? -1 : 1));
-	// code.emit(n, "jal newObject");
-	// stackHeight += 4;
-	// code.emit(n, "la $t0,CLASS__" + (isIntOrBool ? "DataArray" :
-	// "ObjectArray"));
-	// code.emit(n, "sw $t0,-12($s7)");
-	// return null;
-	// }
-	//
-	public Object visitLocalVarDecl(LocalVarDecl n) {
-		n.initExp.accept(this);
-		n.offset = -stackHeight;
+	public Object visitNewArray(NewArray n) {
+		n.sizeExp.accept(this);
+		code.emit(n, "lw $s7,($sp)");
+		code.emit(n, "addu $sp,$sp,8");
+		stackHeight -= 8;
+		final boolean isIntOrBool = n.objType instanceof IntegerType || n.objType instanceof BooleanType;
+		code.emit(n, "li $s6, " + (isIntOrBool ? -1 : 1));
+		code.emit(n, "jal newObject");
+		stackHeight += 4;
+		code.emit(n, "la $t0,CLASS__" + (isIntOrBool ? "DataArray" : "ObjectArray"));
+		code.emit(n, "sw $t0,-12($s7)");
 		return null;
 	}
 
-	//
+	/**
+	 * Call for whether object is a super or not
+	 */
 	public Object visitCall(Call n) {
+		// as it currently stands, only checks for whether it is a super
 		final int savedStackHeight = stackHeight;
 		n.obj.accept(this);
 		n.parms.accept(this);
@@ -357,61 +361,88 @@ public class CG3Visitor extends ASTvisitor {
 		return null;
 	}
 
-	//
-	// public Object visitCallStatement(CallStatement n) {
-	// n.callExp.accept(this);
-	// if (n.callExp.type instanceof VoidType) return null;
-	// final int stackUpdate = n.callExp.type instanceof IntegerType ? 8 : 4;
-	// code.emit(n, "addu $sp,$sp," + stackUpdate);
-	// stackHeight -= stackUpdate;
-	// return null;
-	// }
-	//
-	// public Object visitBlock(Block n) {
-	// final int currentStackHeight = stackHeight;
-	// n.stmts.accept(this);
-	// if (stackHeight != currentStackHeight) code.emit(n, "addu $sp, " +
-	// (stackHeight - currentStackHeight));
-	// stackHeight = currentStackHeight;
-	// return null;
-	// }
-	//
-	// public Object visitIf(If n) {
-	// n.exp.accept(this);
-	// code.emit(n, "lw $t0,($sp)");
-	// code.emit(n, "addu $sp,$sp,4");
-	// stackHeight -= 4;
-	// code.emit(n, "beq $t0,$zero,if_else_" + n.uniqueId);
-	// n.trueStmt.accept(this);
-	// code.emit(n, "j if_done_" + n.uniqueId);
-	// code.emit(n, "if_else_" + n.uniqueId + ":");
-	// n.falseStmt.accept(this);
-	// code.emit(n, "if_done_" + n.uniqueId + ":");
-	// return null;
-	// }
-	//
-	// public Object visitWhile(While n) {
-	// n.stackHeight = stackHeight;
-	// code.emit(n, "j while_enter_" + n.uniqueId);
-	// code.emit(n, "while_top_" + n.uniqueId + ":");
-	// n.body.accept(this);
-	// code.emit(n, "while_enter_" + n.uniqueId + ":");
-	// n.exp.accept(this);
-	// code.emit(n, "lw $t0,($sp)");
-	// code.emit(n, "addu $sp,$sp,4");
-	// stackHeight -= 4;
-	// code.emit(n, "bne $t0,$zero,while_top_" + n.uniqueId);
-	// code.emit(n, "break_target_" + n.uniqueId + ":");
-	// return null;
-	// }
-	//
-	// public Object visitBreak(Break n) {
-	// final int stackDifference = stackHeight - n.breakLink.stackHeight;
-	// if (stackDifference != 0) code.emit(n, "addu $sp," + stackDifference);
-	// code.emit(n, "j break_target_" + n.uniqueId);
-	// return null;
-	// }
-	//
+	public Object visitLocalVarDecl(LocalVarDecl n) {
+		n.initExp.accept(this);
+		n.offset = -stackHeight;
+		return null;
+	}
+
+	public Object visitCallStatement(CallStatement n) {
+		n.callExp.accept(this);
+		if (n.callExp.type instanceof VoidType) return null;
+		final int stackUpdate = n.callExp.type instanceof IntegerType ? 8 : 4;
+		code.emit(n, "addu $sp,$sp," + stackUpdate);
+		stackHeight -= stackUpdate;
+		return null;
+	}
+
+	public Object visitBlock(Block n) {
+		final int currentStackHeight = stackHeight;
+		n.stmts.accept(this);
+		if (stackHeight != currentStackHeight) code.emit(n, "addu $sp, " + (stackHeight - currentStackHeight));
+		stackHeight = currentStackHeight;
+		return null;
+	}
+
+	public Object visitIf(If n) {
+		n.exp.accept(this);
+		code.emit(n, "lw $t0,($sp)");
+		code.emit(n, "addu $sp,$sp,4");
+		stackHeight -= 4;
+		code.emit(n, "beq $t0,$zero,if_else_" + n.uniqueId);
+		n.trueStmt.accept(this);
+		code.emit(n, "j if_done_" + n.uniqueId);
+		code.emit(n, "if_else_" + n.uniqueId + ":");
+		n.falseStmt.accept(this);
+		code.emit(n, "if_done_" + n.uniqueId + ":");
+		return null;
+	}
+
+	public Object visitWhile(While n) {
+		n.stackHeight = stackHeight;
+		code.emit(n, "j while_enter_" + n.uniqueId);
+		code.emit(n, "while_top_" + n.uniqueId + ":");
+		n.body.accept(this);
+		code.emit(n, "while_enter_" + n.uniqueId + ":");
+		n.exp.accept(this);
+		code.emit(n, "lw $t0,($sp)");
+		code.emit(n, "addu $sp,$sp,4");
+		stackHeight -= 4;
+		code.emit(n, "bne $t0,$zero,while_top_" + n.uniqueId);
+		code.emit(n, "break_target_" + n.uniqueId + ":");
+		return null;
+	}
+
+	public Object visitBreak(Break n) {
+		final int stackDifference = stackHeight - n.breakLink.stackHeight;
+		if (stackDifference != 0) code.emit(n, "addu $sp," + stackDifference);
+		code.emit(n, "j break_target_" + n.uniqueId);
+		return null;
+	}
+
+	/**
+	 * Need cases for when target is an IdentifierExp, InstVarAccess,
+	 * ArrayLookup
+	 */
+	public Object visitAssign(Assign n) {
+
+		return null;
+	}
+
+	public Object visitLabel(Label n) {
+		stackHeight = n.enclosingSwitch.stackHeight;
+		code.emit(n, "case_label_" + n.uniqueId + ":");
+		return null;
+	}
+
+	/**
+	 * Optional, return to when all else is complete
+	 */
+	public Object visitSwitch(Switch n) {
+
+		return null;
+	}
+
 	public Object visitMethodDeclVoid(MethodDeclVoid n) {
 		code.emit(n, ".globl fcn_" + n.uniqueId + "_" + n.name);
 		code.emit(n, "fcn_" + n.uniqueId + "_" + n.name + ":");
@@ -421,14 +452,32 @@ public class CG3Visitor extends ASTvisitor {
 		code.emit(n, "sw $ra," + n.thisPtrOffset + "($sp)");
 		stackHeight = 0; // set visitor's stack height to 0??
 		n.stmts.accept(this);
-		code.emit(n, "lw $ra, " + 4 + "($sp)");
-		code.emit(n, "lw $s2, " + 4 + "($sp)");
+		code.emit(n, "lw $ra, " + 4 + "($sp)"); // offset of saved return
+												// address???
+		code.emit(n, "lw $s2, " + 4 + "($sp)"); // saved this pointer??
 		code.emit(n, "addu $sp, $sp, " + (stackHeight + 4 + n.formals.size() * 4 + 4));
 		code.emit(n, "jr $ra");
 		return null;
 	}
 
-	//
+	public Object visitMethodDeclNonVoid(MethodDeclNonVoid n) {
+		code.emit(n, ".globl fcn_" + n.uniqueId + "_" + n.name);
+		code.emit(n, "fcn_" + n.uniqueId + "_" + n.name + ":");
+		code.emit(n, "subu $sp,$sp,4");
+		code.emit(n, "sw $s2,($sp)");
+		code.emit(n, "lw $s2," + n.thisPtrOffset + "($sp)");
+		code.emit(n, "sw $ra," + n.thisPtrOffset + "($sp)");
+		stackHeight = 0; // set visitor's stack height to 0??
+		n.stmts.accept(this);
+		n.rtnExp.accept(this);
+		code.emit(n, "lw $ra, " + 4 + "($sp)"); // offset of saved return
+		// address???
+		code.emit(n, "lw $s2, " + 4 + "($sp)"); // saved this pointer??
+		code.emit(n, "");	//determine offset on stack for return-value
+		
+		return null;
+	}
+
 	public Object visitProgram(Program n) {
 		code.emit(n, ".text");
 		code.emit(n, ".globl main");
