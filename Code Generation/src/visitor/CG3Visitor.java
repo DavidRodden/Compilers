@@ -439,7 +439,24 @@ public class CG3Visitor extends ASTvisitor {
 	 * Optional, return to when all else is complete
 	 */
 	public Object visitSwitch(Switch n) {
-
+		n.stackHeight = stackHeight;
+		n.exp.accept(this);
+		code.emit(n, "lw $t1,($sp)");
+		code.emit(n, "addu $sp,8");
+		stackHeight -= 8;
+		Default def = null;
+		for (final Statement s : n.stmts) {
+			if (s instanceof Default)
+				def = (Default) s;
+			else if (s instanceof Case) {
+				code.emit(n, "li $t0, " + (Integer) ((Case) s).exp.accept(conEvalVis));
+				code.emit(n, "beq $t0,$t1,case_label_" + s.uniqueId);
+			}
+		}
+		code.emit(n, def != null ? "j case_label_" + def.uniqueId : "j break_target_" + n.uniqueId);
+		n.stmts.accept(this);
+		code.emit(n, "break_target_" + n.uniqueId + ":");
+		stackHeight = n.stackHeight;
 		return null;
 	}
 
@@ -473,8 +490,8 @@ public class CG3Visitor extends ASTvisitor {
 		code.emit(n, "lw $ra, " + 4 + "($sp)"); // offset of saved return
 		// address???
 		code.emit(n, "lw $s2, " + 4 + "($sp)"); // saved this pointer??
-		code.emit(n, "");	//determine offset on stack for return-value
-		
+		code.emit(n, ""); // determine offset on stack for return-value
+
 		return null;
 	}
 
