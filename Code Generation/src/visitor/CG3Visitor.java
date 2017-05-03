@@ -343,16 +343,16 @@ public class CG3Visitor extends ASTvisitor {
 	}
 
 	public Object visitCall(Call n) {
+		code.emit(n, "# stack height equals " + stackHeight);
 		final int savedStackHeight = stackHeight;
 		n.obj.accept(this);
 		n.parms.accept(this);
-		final int stackAddition = n.type == null ? 0 : n.type instanceof IntegerType ? 8 : 4;
+		final int stackAddition = n.type instanceof VoidType ? 0 : n.type instanceof IntegerType ? 8 : 4;
 		if (n.obj instanceof Super) {
-			if (n.obj instanceof Super) {
-				code.emit(n, "jal " + (n.methodLink.pos < 0 ? n.methName + "_" + n.methodLink.classDecl.name
-						: "fcn_" + n.methodLink.uniqueId + "_" + n.methName));
-				stackHeight = savedStackHeight + stackAddition;
-			}
+			code.emit(n, "jal "
+					+ (n.methodLink.pos < 0 ? n.methName + "_" + n.methodLink.classDecl.name : "fcn_" + n.methodLink.uniqueId + "_" + n.methName));
+			stackHeight = savedStackHeight + stackAddition;
+			code.emit(n, "# stack height equals " + stackHeight);
 			return null;
 		}
 		code.emit(n, "lw $t0," + (n.methodLink.thisPtrOffset - 4) + "($sp)");
@@ -361,6 +361,7 @@ public class CG3Visitor extends ASTvisitor {
 		code.emit(n, "lw $t0," + (n.methodLink.vtableOffset * 4) + "($t0)");
 		code.emit(n, "jalr $t0");
 		stackHeight = savedStackHeight + stackAddition;
+		code.emit(n, "# stack height equals " + stackHeight);
 		return null;
 	}
 
@@ -419,7 +420,7 @@ public class CG3Visitor extends ASTvisitor {
 	public Object visitBreak(Break n) {
 		final int stackDifference = stackHeight - n.breakLink.stackHeight;
 		if (stackDifference != 0) code.emit(n, "addu $sp," + stackDifference);
-		code.emit(n, "j break_target_" + n.uniqueId);
+		code.emit(n, "j break_target_" + n.breakLink.uniqueId);
 		return null;
 	}
 
@@ -502,12 +503,14 @@ public class CG3Visitor extends ASTvisitor {
 		code.emit(n, "subu $sp,$sp,4");
 		code.emit(n, "sw $s2,($sp)");
 		code.emit(n, "lw $s2," + n.thisPtrOffset + "($sp)");
-		code.emit(n, "sw $ra," + stackHeight + "($sp)");
+		code.emit(n, "sw $ra," + n.thisPtrOffset + "($sp)");
 		stackHeight = 0;
 		n.stmts.accept(this);
+		code.emit(n, "# stack height equals " + stackHeight);
+		code.emit(n, "# thisptroffset equals " + n.thisPtrOffset);
 		code.emit(n, "lw $ra, " + (stackHeight + n.thisPtrOffset) + "($sp)");
-		code.emit(n, "lw $s2, " + n.thisPtrOffset + "($sp)");
-		code.emit(n, "addu $sp, $sp, " + (stackHeight + 4 + 4));
+		code.emit(n, "lw $s2, " + stackHeight + "($sp)");
+		code.emit(n, "addu $sp, $sp, " + (stackHeight + n.thisPtrOffset + 4));
 		code.emit(n, "jr $ra");
 		return null;
 	}
@@ -528,9 +531,14 @@ public class CG3Visitor extends ASTvisitor {
 		// height
 		// need offset for CG tag for when int
 		code.emit(n, "lw $t0,($sp)");
-		code.emit(n, "sw $t0," + n.thisPtrOffset + "($sp)");
-		if (n.rtnType instanceof IntegerType) code.emit(n, "sw $s5," + n.vtableOffset + "($sp)");
-		code.emit(n, "addu $sp, $sp, " + (stackHeight + 4 + n.formals.size() * 4 + 4 - (n.rtnType instanceof IntegerType ? 8 : 4)));
+		if (n.rtnType instanceof IntegerType) {
+			code.emit(n, "sw $s5," + (stackHeight + n.thisPtrOffset) + "($sp)");
+			code.emit(n, "sw $t0," + (stackHeight + n.thisPtrOffset - 4) + "($sp)");
+			code.emit(n, "addu $sp, $sp, " + (stackHeight + 4 + n.thisPtrOffset - 8));
+		} else {
+			code.emit(n, "sw $t0," + (stackHeight + n.thisPtrOffset) + "($sp)");
+			code.emit(n, "addu $sp, $sp, " + (stackHeight + 4 + n.thisPtrOffset - 4));
+		}
 		code.emit(n, "jr $ra");
 		return null;
 	}

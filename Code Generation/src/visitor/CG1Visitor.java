@@ -64,9 +64,16 @@ public class CG1Visitor extends ASTvisitor {
 	}
 
 	public Object visitClassDecl(ClassDecl n) {
-		currentMethodTable = superclassMethodTables.peek();
+		currentMethodTable = (Vector<String>) superclassMethodTables.peek().clone();
 		final boolean superNull = n.superLink == null;
-		currentMethodOffset = superNull ? 0 : 1 + n.superLink.methodTable.size();
+		int methodsFound = 0;
+		ClassDecl currentClass = n.superLink;
+		while (currentClass != null) {
+			for (final String s : currentClass.methodTable.keySet())
+				if (currentClass.methodTable.get(s).superMethod == null) methodsFound++;
+			currentClass = currentClass.superLink;
+		}
+		currentMethodOffset = superNull ? 1 : 1 + methodsFound;
 		currentDataInstVarOffset = superNull ? -16 : -16 - (superNull ? 0 : 4 * n.superLink.numDataInstVars);
 		currentObjInstVarOffset = superNull ? 0 : 4 * n.superLink.numObjInstVars;
 		super.visitClassDecl(n);
@@ -83,18 +90,23 @@ public class CG1Visitor extends ASTvisitor {
 	}
 
 	public Object visitMethodDecl(MethodDecl n) {
-		n.thisPtrOffset = 4 * (1 + n.formals.size());
+		n.thisPtrOffset = 4;
+		for (final VarDecl v : n.formals)
+			n.thisPtrOffset += v.type instanceof IntegerType ? 8 : 4;
 		currentFormalVarOffset = n.thisPtrOffset;
 		super.visitMethodDecl(n);
 		final String label = n.pos < 0 ? n.name + "_" + n.classDecl.name : String.format("fcn_%d_%s", n.uniqueId, n.name);
 		if (n.superMethod == null) {
+			code.emit(n, "# vtableOffset: " + n.vtableOffset);
 			n.vtableOffset = currentMethodOffset++;
+			code.emit(n, "# vtableOffset: " + n.vtableOffset);
 			currentMethodTable.add(label);
 			return null;
 		}
+		code.emit(n, "# vtableOffset: " + n.vtableOffset);
 		n.vtableOffset = n.superMethod.vtableOffset;
-		for (int i = 0; i < currentMethodTable.size(); i++)
-			if (currentMethodTable.get(i).equals(n.superMethod)) currentMethodTable.add(i, label);
+		code.emit(n, "# vtableOffset: " + n.vtableOffset);
+		currentMethodTable.set(n.superMethod.vtableOffset - 1, label);
 		return null;
 	}
 
